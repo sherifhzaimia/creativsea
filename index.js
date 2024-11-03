@@ -71,6 +71,10 @@ async function extractSessionToken(res) {
     // استخراج الكوكيز بعد تسجيل الدخول
     const cookies = await page.cookies();
 
+    // حذف الجلسات القديمة
+    await Session.deleteMany({});
+    console.log("Old sessions deleted.");
+
     // البحث عن توكين الجلسة
     const sessionToken = cookies.find(
       (cookie) => cookie.name === "wordpress_logged_in_69f5389998994e48cb1f2b3bcad30e49"
