@@ -1,6 +1,6 @@
 const puppeteer = require("puppeteer");
 const express = require("express");
-const fs = require("fs");
+const mongoose = require("mongoose");
 const cors = require("cors");
 
 const app = express();
@@ -10,6 +10,29 @@ const port = process.env.PORT || 3000;
 app.use(cors({
   origin: 'https://app.inno-acc.com'
 }));
+
+// الاتصال بقاعدة بيانات MongoDB Atlas
+mongoose.connect('mongodb+srv://sherif_hzaimia:ch0793478417@cluster0.oth1w.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0', {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+}).then(() => {
+  console.log('Connected to MongoDB Atlas');
+}).catch((error) => {
+  console.error('Error connecting to MongoDB:', error);
+});
+
+// إنشاء نموذج للجلسات
+const sessionSchema = new mongoose.Schema({
+  name: String,
+  value: String,
+  domain: String,
+  path: String,
+  expires: Number,
+  httpOnly: Boolean,
+  secure: Boolean,
+});
+
+const Session = mongoose.model('Session', sessionSchema);
 
 async function extractSessionToken(res) {
   try {
@@ -23,7 +46,6 @@ async function extractSessionToken(res) {
         "--no-zygote",
         "--single-process",
       ]
-     
     });
 
     const page = await browser.newPage();
@@ -51,12 +73,12 @@ async function extractSessionToken(res) {
 
     // البحث عن توكين الجلسة
     const sessionToken = cookies.find(
-      (cookie) =>
-        cookie.name === "wordpress_logged_in_69f5389998994e48cb1f2b3bcad30e49"
+      (cookie) => cookie.name === "wordpress_logged_in_69f5389998994e48cb1f2b3bcad30e49"
     );
 
     if (sessionToken) {
-      const tokenData = {
+      // حفظ التوكين في قاعدة البيانات
+      const sessionData = new Session({
         name: sessionToken.name,
         value: sessionToken.value,
         domain: sessionToken.domain,
@@ -64,15 +86,13 @@ async function extractSessionToken(res) {
         expires: sessionToken.expires,
         httpOnly: sessionToken.httpOnly,
         secure: sessionToken.secure,
-      };
+      });
 
-      // كتابة التوكين في ملف JSON
-      fs.writeFileSync("sessionToken.json", JSON.stringify(tokenData, null, 2));
-
-      console.log("تم استخراج توكين الجلسة وحفظه بنجاح في ملف sessionToken.json");
+      await sessionData.save();
+      console.log("Session token saved to MongoDB Atlas successfully.");
 
       // إرسال التوكين كاستجابة لـ API
-      res.json({ success: true, token: tokenData });
+      res.json({ success: true, token: sessionData });
     } else {
       console.log("لم يتم العثور على توكين الجلسة.");
       res.json({ success: false, message: "لم يتم العثور على توكين الجلسة." });
