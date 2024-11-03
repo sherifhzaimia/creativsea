@@ -110,6 +110,23 @@ async function extractSessionToken(res) {
   }
 }
 
+// نقطة النهاية الجديدة لجلب أحدث بيانات الجلسة
+app.get("/get-session", async (req, res) => {
+  try {
+    // استرجاع أحدث جلسة من قاعدة البيانات
+    const sessionData = await Session.findOne().sort({ _id: -1 });
+
+    if (sessionData) {
+      res.json({ success: true, session: sessionData });
+    } else {
+      res.json({ success: false, message: "No session data found." });
+    }
+  } catch (error) {
+    console.error("Error retrieving session data:", error);
+    res.status(500).json({ success: false, message: "Error retrieving session data." });
+  }
+});
+
 app.get("/start-session", (req, res) => {
   extractSessionToken(res);
 });
