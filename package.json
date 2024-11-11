@@ -4,13 +4,12 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "concurrently \"node index.js\" \"node getpipiads.js\""
-},
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "concurrently": "^9.1.0",
     "cors": "^2.8.5",
     "express": "^4.21.1",
     "mongodb": "^6.10.0",
