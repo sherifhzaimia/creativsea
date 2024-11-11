@@ -1,24 +1,18 @@
 const puppeteer = require("puppeteer");
 const express = require("express");
 const mongoose = require("mongoose");
-const cors = require("cors");
 
 const app = express();
 const port = process.env.PORT || 3000;
 
-// تمكين CORS فقط للطلبات القادمة من https://app.inno-acc.com
-app.use(cors({
-  origin: ['https://app.inno-acc.com', 'chrome-extension://imhiiignfblghjjhpjfpgedinddaobjf']
-}));
-
 // الاتصال بقاعدة بيانات MongoDB Atlas
-mongoose.connect('mongodb+srv://sherif_hzaimia:ch0793478417@cluster0.oth1w.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0', {
+mongoose.connect("mongodb+srv://sherif_hzaimia:ch0793478417@cluster0.oth1w.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0", {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 }).then(() => {
-  console.log('Connected to MongoDB Atlas');
+  console.log("Connected to MongoDB Atlas");
 }).catch((error) => {
-  console.error('Error connecting to MongoDB:', error);
+  console.error("Error connecting to MongoDB:", error);
 });
 
 // إنشاء نموذج للجلسات
@@ -33,38 +27,31 @@ const sessionSchema = new mongoose.Schema({
   source: String // حقل جديد لتحديد مصدر الجلسة
 });
 
-const Session = mongoose.model('Session', sessionSchema);
+const Session = mongoose.model("sessionspipiads", sessionSchema);
 
 async function extractSessionToken(res) {
   try {
     const browser = await puppeteer.launch({
       headless: true,
-      args: [
-        "--no-sandbox",
-        "--disable-setuid-sandbox",
-        "--disable-dev-shm-usage",
-        "--disable-gpu",
-        "--no-zygote",
-        "--single-process",
-      ]
+      args: ["--no-sandbox", "--disable-setuid-sandbox"]
     });
 
     const page = await browser.newPage();
 
-    // الذهاب إلى صفحة تسجيل الدخول لـ CreativeSea
-    await page.goto("https://creativsea.com/my-account/", {
+    // الذهاب إلى صفحة تسجيل الدخول لـ Pipiads
+    await page.goto("https://pipiads.com/login", {
       waitUntil: "networkidle2",
-      timeout: 120000 // 120 ثوان
+      timeout: 120000
     });
 
-    // إدخال اسم المستخدم
-    await page.type("#username", "danielwidmer55477@gmail.com");
+    // إدخال البريد الإلكتروني
+    await page.type("input[placeholder='Veuillez saisir votre adresse e-mail']", "spyessentials2024@outlook.com");
 
     // إدخال كلمة المرور
-    await page.type("#password", "rankerfox.com#345");
+    await page.type("input[placeholder='Veuillez saisir votre mot de passe']", "ScboLi12.");
 
     // النقر على زر تسجيل الدخول
-    await page.click('button[name="login"]');
+    await page.click('button[type="button"].el-button--primary');
 
     // الانتظار حتى يتم التوجيه بعد تسجيل الدخول
     await page.waitForNavigation({ waitUntil: "networkidle2", timeout: 60000 });
@@ -76,13 +63,13 @@ async function extractSessionToken(res) {
     await Session.deleteMany({});
     console.log("Old sessions deleted.");
 
-    // البحث عن توكين الجلسة
+    // البحث عن توكين الجلسة "PP-userInfo"
     const sessionToken = cookies.find(
-      (cookie) => cookie.name === "wordpress_logged_in_69f5389998994e48cb1f2b3bcad30e49"
+      (cookie) => cookie.name === "PP-userInfo"
     );
 
     if (sessionToken) {
-      // حفظ التوكين في قاعدة البيانات مع إضافة حقل "source"
+      // حفظ التوكين في قاعدة البيانات مع تحديد المصدر كـ "pipiads"
       const sessionData = new Session({
         name: sessionToken.name,
         value: sessionToken.value,
@@ -91,7 +78,7 @@ async function extractSessionToken(res) {
         expires: sessionToken.expires,
         httpOnly: sessionToken.httpOnly,
         secure: sessionToken.secure,
-        source: "index" // تعيين مصدر الجلسة كـ "index" لهذا الخادم
+        source: "pipiads" // تعيين المصدر كـ "pipiads"
       });
 
       await sessionData.save();
@@ -112,11 +99,11 @@ async function extractSessionToken(res) {
   }
 }
 
-// نقطة النهاية لجلب أحدث بيانات الجلسة
-app.get("/get-session", async (req, res) => {
+// نقطة النهاية لجلب أحدث بيانات الجلسة الخاصة بـ Pipiads
+app.get("/get-pipiads", async (req, res) => {
   try {
-    // استرجاع أحدث جلسة من قاعدة البيانات
-    const sessionData = await Session.findOne().sort({ _id: -1 });
+    // استرجاع أحدث جلسة من قاعدة البيانات حيث تكون المصدر "pipiads"
+    const sessionData = await Session.findOne({ source: "pipiads" }).sort({ _id: -1 });
 
     if (sessionData) {
       res.json({ success: true, session: sessionData });
@@ -129,7 +116,7 @@ app.get("/get-session", async (req, res) => {
   }
 });
 
-app.get("/start-session", (req, res) => {
+app.get("/start-pipiads", (req, res) => {
   extractSessionToken(res);
 });
 
