@@ -9,7 +9,7 @@ const port = process.env.PORT || 3000;
 // تمكين CORS فقط للطلبات القادمة من https://app.inno-acc.com
 app.use(cors({
  origin: ['https://app.inno-acc.com',
-   'chrome-extension://imhiiignfblghjjhpjfpgedinddaobjf']
+   'chrome-extension://pcpipdhikpanjjfajcbfaelobcfcofec']
 }));
 
 // الاتصال بقاعدة بيانات MongoDB Atlas
